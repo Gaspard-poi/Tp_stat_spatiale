@@ -58,6 +58,41 @@ plot(dep_paca['dep'])
 
 #13
 
-dep_paca2 <- Communes_PACA2%>%
-  st_union(geom)%>%
-  summarise(sum(surf))
+dep_paca2 <- Communes_PACA2 %>%
+  group_by(dep) %>% 
+  summarise(geom = st_union(geom))  
+
+plot(dep_paca2)
+
+#14
+
+centroid_dep_paca <- st_centroid(dep_paca2)
+plot(centroid_dep_paca, add = T)
+plot(dep_paca2)
+
+plot(st_geometry(centroid_dep_paca), add = T)
+plot(st_geometry(dep_paca2))
+
+centroid_dep_paca <- centroid_dep_paca %>%
+  mutate(dep_lib = c("Alpes-De-Haute-Provence", "Hautes-Alpes", 'Alpes-maritimes', "Bouches-Du-Rhône", "Var", "Vaucluse"))
+
+centroid_coords <- st_coordinates(centroid_dep_paca)
+centroid_coords <- centroid_coords %>%
+  bind_cols(
+    centroid_dep_paca %>%
+      select(dep, dep_lib)%>%
+      st_drop_geometry()
+  )
+
+plot(st_geometry(dep_paca2))
+plot(st_geometry(centroid_dep_paca), add = T)
+text(x = centroid_coords$X, y = centroid_coords$Y, labels = centroid_coords$dep_lib, pos = 3, cex = 0.8,
+     col = "orangered")
+
+commune_centroid_paca <- st_intersects(centroid_dep_paca, Communes_PACA2)
+typeof(commune_centroid_paca)
+
+#16
+st_intersection(centroid_dep_paca, Communes_PACA2)
+
+Q16_within <- st_within(centroid_dep_paca, Communes_PACA2)
