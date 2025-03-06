@@ -102,3 +102,68 @@ pa12 <- c(
     )[c(2,4:5)]
   )
 plot(popcomfm_sf['densite_c'], border = F, pal = pa12)
+
+
+##################################
+##### EXO 2 ######################
+##################################
+
+dep_francemetro_2021 <- st_read("fonds/dep_francemetro_2021.gpkg")
+tx_pauvrete <- read_xlsx("data/Taux_pauvrete_2018.xlsx")
+mer <- st_read("fonds/merf_2021.gpkg")
+
+dep_francemetro_2018_pauv <- dep_francemetro_2021 %>%
+  left_join(tx_pauvrete %>% select(-Dept), by = c("code"="Code"))
+
+mf_map(x = dep_francemetro_2018_pauv,
+       var = "Tx_pauvrete",
+       type = "choro",
+       nbreaks = 4,
+       breaks = "jenks")
+
+mf_map(x = dep_francemetro_2018_pauv,
+       var = "Tx_pauvrete",
+       type = "choro",
+       breaks = c(0,13,17,25, max(dep_francemetro_2018_pauv$Tx_pauvrete)),
+       pal = couleur,
+       leg_pos = NA)
+
+couleur <- rev(mf_get_pal(4, "Mint"))
+
+mf_inset_on(x = dep_francemetro_2018_pauv, pos = "topright", cex = .2)
+
+mf_init(dep_francemetro_2018_pauv %>%
+          filter(code %in% c("75", "92", "93", "94")))
+
+mf_map(x = dep_francemetro_2018_pauv %>%
+         filter(code %in% c("75", "92", "93", "94")),
+       var = "Tx_pauvrete",
+       type = "choro",
+       breaks = c(0,13,17,25, max(dep_francemetro_2018_pauv$Tx_pauvrete)),
+       pal = couleur,
+       leg_pos = NA,
+       add = T)
+
+coords <- st_coordinates(st_centroid(labels_data$geom))
+
+mf_label(dep_francemetro_2018_pauv %>%
+           filter(code %in% c("75", "92", "93", "94")),
+         var = "code",
+         col = "black")
+
+mf_inset_off()
+
+mf_legend(
+  type = "choro",
+  title = "Taux de pauvreté",
+  val = c("", "Moins de 13", "De 13 à moins de 17", "De 17 à moins de 25", "25 ou plus"),
+  pal = couleur,
+  pos = "left"
+)
+
+mf_map(mer, add = T)
+
+mf_layout(title = "Taux de pauvreté par département en 2018",
+          credits = "Source : INSEE")
+
+
